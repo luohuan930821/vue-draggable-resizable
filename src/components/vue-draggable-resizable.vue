@@ -223,15 +223,22 @@ export default {
       } else {
         this.$el.setAttribute('data-is-snap', 'false')
       }
-    }, // 设置对齐元素
+    }, 
+    // 设置对齐元素
     snapCheck: function () {
+      let width = this.width
+      let height = this.height
       if (this.snap) {
         let p = this.$el.parentNode.childNodes // 获取当前父节点下所有子节点
         if (p.length > 1) {
-          let x1 = this.left
-          let x2 = this.left + this.width
-          let y1 = this.top
-          let y2 = this.top + this.height
+          let x1 = this.rawLeft
+          let x2 = this.rawLeft + width
+          let y1 = this.rawTop
+          let y2 = this.rawTop + height
+
+          // 平行horizontal和垂直vertical对齐
+          let horizontal_arr = []
+          let vertical_arr = []
           for (let i = 0; i < p.length; i++) {
             if (p[i] !== this.$el && p[i].className !== undefined && p[i].getAttribute('data-is-snap') !== 'false') {
               let l = p[i].offsetLeft // 对齐目标的left
@@ -244,22 +251,53 @@ export default {
               let ls = Math.abs(l - x2) <= this.snapTolerance
               let rs = Math.abs(r - x1) <= this.snapTolerance
               if (ts) {
-                this.top = t - this.height
+                this.rawTop = t - height
+                this.rawBottom = this.parentHeight - this.rawTop - height
               }
               if (bs) {
-                this.top = b
+                this.rawTop = b
+                this.rawBottom = this.parentHeight - this.rawTop - height
               }
               if (ls) {
-                this.left = l - this.width
+                this.rawLeft = l - width
+                this.rawRight = this.parentWidth - this.rawLeft - width
               }
               if (rs) {
-                this.left = r
+                this.rawLeft = r
+                this.rawRight = this.parentWidth - this.rawLeft - width
               }
+              // 水平方向平行horizontal对齐
+              horizontal_arr.push(t)
+              horizontal_arr.push(b)
+              horizontal_arr.map((item) => {
+                if(Math.abs(y1 - item) <= this.snapTolerance){
+                  this.rawTop = item
+                  this.rawBottom = this.parentHeight - this.rawTop - height
+                }
+                if(Math.abs(y2 - item) <= this.snapTolerance){
+                  this.rawTop = item - height
+                  this.rawBottom = this.parentHeight - this.rawTop - height
+                }
+              })
+              // 竖直方向垂直vertical对齐
+              vertical_arr.push(l)
+              vertical_arr.push(r)
+              vertical_arr.map((item) => {
+                if(Math.abs(x1 - item) <= this.snapTolerance){
+                  this.rawLeft = item
+                  this.rawRight = this.parentWidth - this.rawLeft - width
+                }
+                if(Math.abs(x2 - item) <= this.snapTolerance){
+                  this.rawLeft = item - width
+                  this.rawRight = this.parentWidth - this.rawLeft - width
+                }
+              })
             }
           }
         }
       }
-    }, // 检测对齐元素
+    }
+    // 检测对齐元素
     getElmPosition: function () {
       this.elmX = parseInt(this.$el.style.left)
       this.elmY = parseInt(this.$el.style.top)
